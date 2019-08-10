@@ -1,0 +1,84 @@
+plugins {
+    id "org.ajoberstar.grgit" version "3.1.1"
+}
+
+import org.gradle.api.internal.tasks.userinput.UserInputHandler
+
+def properties = [:]
+
+task readInput {
+    doLast {
+        def inputHandler = getServices().get(UserInputHandler.class)
+        properties.template = inputHandler.askQuestion('Template', "${project['defaults.template']}")
+        properties.author = inputHandler.askQuestion('Author', "${project['defaults.author']}")
+        properties.name = inputHandler.askQuestion('Project name', "${project['defaults.name']}")
+        properties.group = inputHandler.askQuestion('Project group', "${project['defaults.group']}")
+        properties.packageName = inputHandler.askQuestion('Source package', "${properties.group}.${properties.name}")
+        properties.version = inputHandler.askQuestion('Version', "${project['defaults.version']}")
+    }
+}
+
+task copyGradle(type: Copy) {
+    dependsOn readInput
+    from ("${projectDir}") {
+        include 'gradle/**'
+        include 'gradlew'
+        include 'gradew.bat'
+    }
+    into "${buildDir}/${-> properties.name}/"
+}
+
+task copySrc(type: Copy) {
+    dependsOn readInput
+    from ("${projectDir}/src/${-> properties.template}/") {
+        exclude 'LICENSE.txt'
+        exclude 'gradle.properties'
+        exclude 'src/main/resources/*.properties'
+        exclude 'src/main/java/Application.java'
+    }
+    into "${buildDir}/${-> properties.name}/"
+}
+
+task copyAndExpandSrc(type: Copy) {
+    dependsOn readInput
+    from ("${projectDir}/src/${-> properties.template}/") {
+        include 'LICENSE.txt'
+        include 'gradle.properties'
+        include 'src/main/resources/*.properties'
+    }
+    into "${buildDir}/${-> properties.name}/"
+    expand properties
+}
+
+task copyAndExpandApplication(type: Copy) {
+    dependsOn readInput
+    from ("${projectDir}/src/${-> properties.template}/") {
+        include 'src/main/java/Application.java'
+    }
+    rename { filename ->
+        "${properties.packageName.replaceAll('\\.', '/')}/Application.java"
+    }
+    into "${buildDir}/${-> properties.name}/"
+    expand properties
+}
+
+task initGit {
+    dependsOn readInput
+    doLast {
+        def repo = grgit.init(dir:"${buildDir}/${-> properties.name}/")
+        repo.add(patterns: ['.'])
+        repo.commit(message: 'Initial commit')
+    }
+}
+
+task generate {
+    dependsOn readInput, copyGradle,  copySrc, copyAndExpandSrc, copyAndExpandApplication, initGit
+    group 'Generate'
+    description 'Generate new project'
+}
+
+task clean {
+    group 'Clean up'
+    description 'Delete build directory'
+    delete rootProject.buildDir
+}
