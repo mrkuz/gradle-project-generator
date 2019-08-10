@@ -2,6 +2,7 @@ plugins {
     id "org.ajoberstar.grgit" version "3.1.1"
 }
 
+import org.apache.tools.ant.DirectoryScanner
 import org.gradle.api.internal.tasks.userinput.UserInputHandler
 
 def properties = [:]
@@ -38,6 +39,12 @@ task copySrc(type: Copy) {
         exclude 'src/main/java/Application.java'
     }
     into "${buildDir}/${-> properties.name}/"
+    doFirst {
+        DirectoryScanner.defaultExcludes.each { DirectoryScanner.removeDefaultExclude it }
+    }
+    doLast {
+        DirectoryScanner.resetDefaultExcludes()
+    }
 }
 
 task copyAndExpandSrc(type: Copy) {
