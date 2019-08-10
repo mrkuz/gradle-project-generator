@@ -34,6 +34,7 @@ task copySrc(type: Copy) {
         exclude 'LICENSE.txt'
         exclude 'gradle.properties'
         exclude 'src/main/resources/*.properties'
+        exclude 'src/main/resources/*.xml'
         exclude 'src/main/java/Application.java'
     }
     into "${buildDir}/${-> properties.name}/"
@@ -45,6 +46,7 @@ task copyAndExpandSrc(type: Copy) {
         include 'LICENSE.txt'
         include 'gradle.properties'
         include 'src/main/resources/*.properties'
+        include 'src/main/resources/*.xml'
     }
     into "${buildDir}/${-> properties.name}/"
     expand properties

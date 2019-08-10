@@ -12,7 +12,7 @@
         <asyncLogger name="org.springframework.web" level="info" additivity="false" includeLocation="false">
             <AppenderRef ref="stdout"/>
         </asyncLogger>
-        <asyncLogger name="net.bnb" level="debug" additivity="false" includeLocation="false">
+        <asyncLogger name="<%= packageName %>" level="debug" additivity="false" includeLocation="false">
             <AppenderRef ref="stdout"/>
         </asyncLogger>
     </Loggers>
